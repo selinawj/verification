@@ -1,11 +1,8 @@
 library(jsonlite)
-# library(data.table)
 
-# prepost = fread("nyc_prepost_request.csv", na.strings=" ",header=T)
 prepost = read.csv("nyc_prepost_request.csv", na.strings=" ",header=T)
 
 # create a column for prepost blob beside verify
-# prepost[,prepost_blob:=character(.N)]
 prepost['prepost_blob']<-NA
  
 # #uniformize from factors to characters format
@@ -71,8 +68,7 @@ domainScammer <- function(x){
   paste(counter/total*100, "%", sep="")
 }
 
-
-#plot domain categories against verify statuses
+#create domain column
 prepost['domain']<-NA
 
 #extract domain of each usernames into domain col
@@ -86,107 +82,58 @@ while (row <= nrow(prepost)){
   row = row + 1
 }
 
-prepostRow = 1
-domainDFRow = 1
-domainCol = 55
-domainDFCol = 1
-while (prepostRow <= nrow(prepost)){
-  if (!prepost[prepostRow, domainCol] %in% domainDF$domain){
-    domainDF[domainDFRow, domainDFCol] = prepost[prepostRow, domainCol]
+#create a status column
+prepost["status"] <- NA
+row = 1
+verify_status_col = 10
+scammer_col = 56
+while (row <= nrow(prepost)){
+  status = as.character(prepost[row, verify_status_col])
+  if (grepl("-1", status)) {
+    prepost[row, scammer_col] = "scammer"
+  } else {
+    prepost[row, scammer_col] = "non-scammer"
   }
-  prepostRow = prepostRow + 1
+  row = row + 1
 }
 
-# poster = read.csv("poster.csv", na.strings=" ", header = F)
-# license = read.csv("license.csv", na.strings=" ", header = F)
-# posting_state = read.csv("posting_state.csv", na.strings=" ", header = F)
-# phone_num = read.csv("phone_num.csv", na.strings=" ", header = F)
-# carrier = read.csv("carrier.csv", na.strings=" ", header = F)
-# 
-# #change all NULL to NA
-# is.na(prepost) <- prepost == "NULL"
-# 
-# #remove unnecessary cols
-# prepost[, (c(1, 4, 6, 8:9, 11, 13:18, 20:21, 23:25, 28:37, 38:53))] <- NULL
-# 
-# #change colname
-# colnames(prepost)[4] <- "poster"
-# colnames(prepost)[8] <- "listing_state"
-# 
-# #add in new cols: license, state, phone_num
-# prepost["license"] <-NA
-# prepost["posting_state"] <-NA
-# prepost["carrier"] <-NA
-# prepost["median"] <-NA
-# 
-# prepost <- prepost[c("type", "account_id", "listing_id", "username", "poster", "license", "posting_state", "listing_state",  "carrier", "bedrooms", "bathrooms", "price", "median", "verification_status")]
-# 
-# library(tidyr)
-# 
-# #separate columns by nonalphanum
-# poster = separate(poster, V1, into = c("account_id", "poster"), sep = "[^[:alnum:]]+")
-# license = separate(license, V1, into = c("account_id", "license"), sep = "\\*")
-# posting_state = separate(posting_state, V1, into = c("account_id", "posting_state"), sep = "\\*")
-# phone_num = separate(phone_num, V1, into = c("account_id", "phone_num"), sep = "\\*")
-# carrier = separate(carrier, V1, into = c("account_id", "carrier"), sep = "[^[:alnum:]]+")
-# 
-# #append poster(existing), license, posting_state, carrier into df
-# row = 1
-# for (each in poster$poster){
-#   if (!is.na(each)){
-#     prepost[row,5] = each
-#   }
-#   row = row + 1
-# }
-# row = 1
-# for (each in license$license){
-#   prepost[row,6] = each
-#   row = row + 1
-# }
-# row = 1
-# for (each in posting_state$posting_state){
-#   prepost[row,7] = each
-#   row = row + 1
-# }
-# row = 1
-# for (each in carrier$carrier){
-#   prepost[row,9] = each
-#   row = row + 1
-# }
-# 
-# #adding phone_num into a new df before appending
-# phone_num_df = data.frame(matrix(0, ncol = 1, nrow = 1422))
-# colnames(phone_num_df) <- "phone"
-# row = 1
-# for (each in phone_num$phone_num){
-#   each = as.numeric(as.character(each))
-#   phone_num_df[row,1] = each
-#   row = row + 1
-# }
-# #doesn't work
-# #row = 1
-# #for (each in phone_num_df$phone){
-# #  prepost[row,9] = each
-# #  row = row + 1
-# #}
-# 
-# #combining phone_num
-# prepost = cbind(prepost, phone_num_df$phone)
-# colnames(prepost)[15] <- "phone_num"
-# 
-# #rearrange cols
-# prepost <- prepost[c("type", "account_id", "listing_id", "username", "poster", "license", "posting_state", "listing_state", "phone_num", "carrier", "bedrooms", "bathrooms", "price", "median", "verification_status")]
-# 
-# #replace empty cells to NA
-# prepost[prepost==""] <- NA
-# 
-# #doesn't work
-# #check poster if agent
-# #for (row in prepost$poster){
-# #  if (row == "agent")
-# #    for (row in prepost$license){
-# #      if (is.na(row)){
-# #        print (row)
-# #      }
-# #    }
-# #}
+#dataframe of how many each domain is present
+domainTable = data.frame(table(prepost$domain))
+colnames(domainTable) = c('domain', 'count')
+
+#ggplot of total number of each domain type by descending order
+domainPlot = ggplot(domainTable, aes(x = reorder(domain, -count), y = count)) + geom_bar(stat = "identity")
+domainPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#dataframe of how many scammers is present in each domain
+domainScammersTable = data.frame(table(prepost$domain, prepost$status))
+colnames(domainScammersTable) = c('domain', 'status', 'count')
+domainScammersPlot = ggplot(domainScammersTable, aes(x = reorder(domain, -count), y = count, fill = status)) + geom_bar(stat = "identity")
+domainScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Domain", y = "Count", x = "Domain", fill = "Status")
+
+#count how many scammers is present in each domain
+domainScammers = data.frame(table(prepost$domain, prepost$status=='scammer'))
+colnames(domainScammers) = c('domain', 'scammer_status', 'count')
+#remove False rows and 0 Count
+domainScammers = domainScammers[domainScammers$scammer_status!="FALSE" & domainScammers$count!="0",]
+domainScammers['percentage'] = ""
+row = 1
+domainCol = 1
+percentageCol = 4
+while (row <= nrow(domainScammers)){
+  domainScammers[row, percentageCol] = domainScammer(domainScammers[row, domainCol])
+  row = row + 1
+}
+
+#read prepostBlob csv file pre-processed by python
+details = read.csv("details.csv", header=F)
+colnames(details) = c("poster", "license", "carrier", "phone_num", "posting_state")
+
+#remove unnecessary cols in prepost
+prepost[, (c(1, 4:18, 20:21, 23:37, 39:54))] <- NULL
+
+#combining prepostBlob details to prepost df
+prepost = cbind(prepost, details)
+
+#rearrange columns
+prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "citystate", "posting_state", "price", "status")]
