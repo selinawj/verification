@@ -75,12 +75,16 @@ merged = merge(prepost, domainScammers, by.x="domain", by.y="domain")
 
 #create a results column
 merged["results"] <- NA
+#create a reason column
+merged['reason'] <- NA
 row = 1
 score_col = 15
 results_col = 16
+reason_col = 17
 while (row <= nrow(merged)) {
   if (merged[row,score_col] >= 4){ #normalized: mean(domainScammers$score) = 3.846154
     merged[row,results_col] = "scammer"
+    merged[row,reason_col] = "scammer domain"
   } else {
     merged[row,results_col] = "non-scammer"
   }
