@@ -210,4 +210,3 @@ recall_accuracy(merged$status, merged$results)
 
 #rearrange columns in merged df
 merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "phone", "citystate", "posting_state", "price", "status", "score", "results", "reason")]
-# #Conclusion: threshold 1.6 - scammer: 264/346 = 76.3%, please verify: 250/1076 = 23.23%

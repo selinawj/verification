@@ -12,6 +12,8 @@ domainPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 #dataframe of how many scammers is present in each domain
 domainScammersTable = data.frame(table(prepost$domain, prepost$status))
 colnames(domainScammersTable) = c('domain', 'status', 'count')
+
+#ggplot of domain scammers
 domainScammersPlot = ggplot(domainScammersTable, aes(x = reorder(domain, -count), y = count, fill = status)) + geom_bar(stat = "identity")
 domainScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Domain", y = "Count", x = "Domain", fill = "Status")
 
