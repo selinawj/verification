@@ -5,7 +5,7 @@ prepost = read.csv("nyc_prepost_request.csv", na.strings=" ",header=T)
 # create a column for prepost blob beside verify
 prepost['prepost_blob']<-NA
  
-# #uniformize from factors to characters format
+#uniformize from factors to characters format
 i <- sapply(prepost, is.factor)
 prepost[i] <- lapply(prepost[i], as.character)
 
@@ -47,27 +47,6 @@ prepost = na.omit(prepost)
 #save as csv file for pre-process in python
 write.csv(prepost, "renthop.csv")
 
-#prints out the % of scammers with the domain x (x is domain in string)
-domainScammer <- function(x){
-  row = 1
-  counter = 0
-  usernameCol = 3
-  verifyCol = 10
-  total = 0
-  while (row <= nrow(prepost)){
-    domain = prepost[row, usernameCol]
-    verify = prepost[row, verifyCol]
-    if (grepl(x, domain)){
-      total = total + 1
-      if (grepl("-1", verify)){
-        counter = counter + 1
-      }
-    }
-    row = row + 1
-  }
-  paste(counter/total*100, "%", sep="")
-}
-
 #create domain column
 prepost['domain']<-NA
 
@@ -94,34 +73,6 @@ while (row <= nrow(prepost)){
   } else {
     prepost[row, scammer_col] = "non-scammer"
   }
-  row = row + 1
-}
-
-#dataframe of how many each domain is present
-domainTable = data.frame(table(prepost$domain))
-colnames(domainTable) = c('domain', 'count')
-
-#ggplot of total number of each domain type by descending order
-domainPlot = ggplot(domainTable, aes(x = reorder(domain, -count), y = count)) + geom_bar(stat = "identity")
-domainPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-#dataframe of how many scammers is present in each domain
-domainScammersTable = data.frame(table(prepost$domain, prepost$status))
-colnames(domainScammersTable) = c('domain', 'status', 'count')
-domainScammersPlot = ggplot(domainScammersTable, aes(x = reorder(domain, -count), y = count, fill = status)) + geom_bar(stat = "identity")
-domainScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Domain", y = "Count", x = "Domain", fill = "Status")
-
-#count how many scammers is present in each domain
-domainScammers = data.frame(table(prepost$domain, prepost$status=='scammer'))
-colnames(domainScammers) = c('domain', 'scammer_status', 'count')
-#remove False rows and 0 Count
-domainScammers = domainScammers[domainScammers$scammer_status!="FALSE" & domainScammers$count!="0",]
-domainScammers['percentage'] = ""
-row = 1
-domainCol = 1
-percentageCol = 4
-while (row <= nrow(domainScammers)){
-  domainScammers[row, percentageCol] = domainScammer(domainScammers[row, domainCol])
   row = row + 1
 }
 

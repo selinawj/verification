@@ -1,4 +1,5 @@
 ##GG PLOTS
+library(ggplot2)
 
 #dataframe of how many each domain is present
 domainTable = data.frame(table(prepost$domain))
@@ -47,7 +48,6 @@ calDomainScammer <- function(x){
 ##SCORING MECHANISM
 
 domainScammers['percentage'] = ""
-domainScammers['score'] = 
 row = 1
 domainCol = 1
 percentageCol = 4
@@ -56,7 +56,7 @@ while (row <= nrow(domainScammers)){
   row = row + 1
 }
 
-domainScammers['score'] = NA
+domainScammers['score'] = ""
 
 #calculates score to be allocated for domain based on % scammers
 row = 1
@@ -101,3 +101,6 @@ confusion_matrix
 library(RTextTools)
 recall_accuracy(merged$status, merged$results)
 #moderately accurate: weighted recall = 0.7451737
+
+#removing unnecessary columns
+merged = merged[,-c(12,13,14)]
