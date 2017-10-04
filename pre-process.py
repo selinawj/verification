@@ -51,12 +51,12 @@ for each in prepostBlob:
     
     # location: longitude
     longitude = each['ip_geolocation']['longitude']
-    longitude = int(longitude)
+    longitude = float(longitude)
     longitudeData.append(longitude)
 
     # location: latitude
     latitude = each['ip_geolocation']['latitude']
-    latitude = int(latitude)
+    latitude = float(latitude)
     latitudeData.append(latitude)
 
 #write to csv with column order specified
