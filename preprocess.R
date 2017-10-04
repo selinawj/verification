@@ -78,13 +78,13 @@ while (row <= nrow(prepost)){
 
 #read prepostBlob csv file pre-processed by python
 details = read.csv("details.csv", header=F)
-colnames(details) = c("poster", "license", "carrier", "phone_num", "posting_state")
+colnames(details) = c("poster", "license", "carrier", "phone_num", "postingLongitude", "postingLatitude")
 
 #remove unnecessary cols in prepost
-prepost[, (c(1, 4:18, 20:21, 23:37, 39:54))] <- NULL
+prepost[, (c(1, 4:18, 20:21, 23:37, 39:41, 44:54))] <- NULL
 
 #combining prepostBlob details to prepost df
 prepost = cbind(prepost, details)
 
 #rearrange columns
-prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "citystate", "posting_state", "price", "status")]
+prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "longitude", "latitude", "postingLongitude", "postingLatitude","price", "status")]
