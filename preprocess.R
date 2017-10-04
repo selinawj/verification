@@ -87,4 +87,4 @@ prepost[, (c(1, 4:18, 20:21, 23:37, 39:41, 44:54))] <- NULL
 prepost = cbind(prepost, details)
 
 #rearrange columns
-prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "longitude", "latitude", "postingLongitude", "postingLatitude","price", "status")]
+prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "latitude", "longitude", "postingLatitude", "postingLongitude", "price", "status")]
