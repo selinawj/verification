@@ -11,12 +11,13 @@ posterData=[]
 carrierData=[]
 licenseData=[]
 phoneData=[]
-psData=[]
+longitudeData=[]
+latitudeData=[]
 prepostBlob = df.ix[:,54]
 for each in prepostBlob:
     each = json.loads(each)
 
-    #poster type
+    # poster type
     if 'purpose_type' in each:
         poster = each['purpose_type']
         poster = str(poster)
@@ -25,7 +26,7 @@ for each in prepostBlob:
         poster = ""
         posterData.append(poster)
 
-    #carrier type
+    # carrier type
     if 'phone_lookup' in each:
         carrier = each['phone_lookup']['carrier_type']
         carrier = str(carrier)
@@ -34,12 +35,12 @@ for each in prepostBlob:
         carrier = ""
         carrierData.append(carrier)
 
-    #agent license
+    # agent license
     license = each['additional-details-agent']
     license = str(license)
     licenseData.append(license)
     
-    #phone num
+    # phone num
     if 'phone_lookup' in each:
         phoneNum = each['phone_lookup']['number']
         phoneNum = str(phoneNum)
@@ -48,11 +49,16 @@ for each in prepostBlob:
         phoneNum = ""
         phoneData.append(phoneNum)
     
-    #posting state
-    ps = each['ip_geolocation']['city']
-    ps = str(ps)
-    psData.append(ps)
+    # location: longitude
+    longitude = each['ip_geolocation']['longitude']
+    longitude = int(longitude)
+    longitudeData.append(longitude)
+
+    # location: latitude
+    latitude = each['ip_geolocation']['latitude']
+    latitude = int(latitude)
+    latitudeData.append(latitude)
 
 #write to csv with column order specified
-detailsBlob = pd.DataFrame({'poster': posterData, 'carrier': carrierData, 'license': licenseData, 'phoneNum': phoneData, 'postingState': psData}, columns = ['poster', 'license', 'carrier', 'phoneNum', 'postingState'])
+detailsBlob = pd.DataFrame({'poster': posterData, 'carrier': carrierData, 'license': licenseData, 'phoneNum': phoneData, 'longitude': longitudeData, 'latitude': latitudeData}, columns = ['poster', 'license', 'carrier', 'phoneNum', 'longitude', 'latitude'])
 detailsBlob.to_csv('details.csv', index=False, header=False)
