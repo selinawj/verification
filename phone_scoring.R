@@ -73,7 +73,7 @@ while (row <= nrow(phoneScammersTable)){
 phoneScammersPlot = ggplot(phoneScammers) + geom_bar(aes(x = reorder(type, -count), y = count, fill = status, group = status), stat = "identity", position = 'dodge') + geom_text(aes(x = reorder(type, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
 phoneScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Phone Type", y = "Count", x = "Phone Type", fill = "Status")
 
-#plot of how many posters in each status
+#plot of how many of each phone type in each status
 scammersPlot = ggplot(phoneScammers, aes(x = reorder(status, -count), y = count, fill = type)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
 scammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of Phone Type of each scammer status", y = "Count", x = "Status", fill = "Type")
 
@@ -84,7 +84,7 @@ calNaPhoneScammer <- function(){
   row = 1
   counter = 0
   phoneCol = 7
-  verifyCol = 11
+  verifyCol = 14
   total = 0
   while (row <= nrow(prepost)){
     phone = prepost[row, phoneCol]
@@ -105,7 +105,7 @@ calPhoneScammer <- function(){
   row = 1
   counter = 0
   phoneCol = 7
-  verifyCol = 11
+  verifyCol = 14
   total = 0
   while (row <= nrow(prepost)){
     phone = prepost[row, phoneCol]
@@ -145,7 +145,7 @@ merged['phone']<-NA
 
 #extract phone type of each usernames into col
 row = 1
-phoneCol = 15
+phoneCol = 18
 while (row <= nrow(merged)){
   if (is.na(merged[row,7])){
     merged[row,phoneCol] = "naPhone"
@@ -157,36 +157,24 @@ while (row <= nrow(merged)){
 
 #update score & reason for phone scammers
 row = 1
-statusCol=11
-scoreCol=12
-reasonCol=14
+scoreCol=16
+reasonCol=17
 while (row <= nrow(merged)){
   if (merged[row, phoneCol] == "naPhone"){
-    if (merged[row, statusCol] == "scammer"){
       merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(phoneScammers[1,5])
       if (is.na(merged[row,reasonCol])){ #update reason
         merged[row,reasonCol] = "missing phone no."
       } else if (!is.na(merged[row,reasonCol])){
         merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "missing phone no.")
       }
-    }
-  } else if (merged[row,phoneCol] == "phone"){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(phoneScammers[2,5])
-      if (is.na(merged[row,reasonCol])){ #update reason
-        merged[row,reasonCol] = "missing phone no."
-      } else if (!is.na(merged[row,reasonCol])){
-        merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "missing phone no.")
-      }
-    }
-  }
+    } 
   row = row + 1
 }
 
 #update results
 row = 1
-results_col = 13
-score_col = 12
+results_col = 15
+score_col = 16
 while (row <= nrow(merged)){
   if (merged[row,score_col] >= 2){ #normalized: mean(phoneScammers$score) = 2
     merged[row,results_col] = "scammer"
@@ -201,12 +189,15 @@ library(RTextTools)
 #generate confusion matrix
 confusion_matrix = table(merged$status, merged$results)
 confusion_matrix
-#                please verify scammer
-#please verify           250     826
-#scammer                  82     264
+#              non-scammer scammer
+#non-scammer         295      83
+#scammer              75      65
 
 recall_accuracy(merged$status, merged$results)
-#increase accuracy: 0.8494208
+#0.6949807
+
+#removing unnecessary cols
+merged = merged[,-c(18)]
 
 #rearrange columns in merged df
-merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "phone", "citystate", "posting_state", "price", "status", "score", "results", "reason")]
+merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "latitude", "longitude", "postingLatitude", "postingLongitude", "price", "status", "results", "score","reason")]
