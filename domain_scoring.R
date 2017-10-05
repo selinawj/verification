@@ -21,6 +21,16 @@ domainScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
 domainScammers = data.frame(table(prepost$domain, prepost$status=='scammer'))
 colnames(domainScammers) = c('domain', 'scammer_status', 'count')
 
+#merge table
+domainScammersTrue = domainScammers[domainScammers$scammer_status!="FALSE",]
+domainScammersFalse = domainScammers[domainScammers$scammer_status!="TRUE",]
+finalDomainTable = merge(domainScammersTrue, domainScammersFalse, by.x="domain", by.y="domain")
+finalDomainTable = finalDomainTable[,-c(2,4)]
+finalDomainTable[c("total", "percentage")] = NA
+colnames(finalDomainTable) = c("domain", "scammers", "nonscammers", "total", "scammersPercentage")
+finalDomainTable$total = with(finalDomainTable, scammers+nonscammers)
+finalDomainTable$scammersPercentage = with(finalDomainTable, scammers/total*100)
+
 #remove False rows and 0 Count
 domainScammers = domainScammers[domainScammers$scammer_status!="FALSE" & domainScammers$count!="0",]
 
@@ -31,7 +41,7 @@ calDomainScammer <- function(x){
   row = 1
   counter = 0
   domainCol = 3
-  verifyCol = 13
+  verifyCol = 14
   total = 0
   while (row <= nrow(prepost)){
     domain = prepost[row, domainCol]
@@ -80,13 +90,13 @@ merged["results"] <- NA
 #create a reason column
 merged['reason'] <- NA
 row = 1
-score_col = 17
-results_col = 18
-reason_col = 19
+score_col = 18
+results_col = 19
+reason_col = 20
 while (row <= nrow(merged)) {
   if (merged[row,score_col] >= 4){ #normalized: mean(domainScammers$score) = 3.846154
     merged[row,results_col] = "scammer"
-    merged[row,reason_col] = "scammer domain"
+    merged[row,reason_col] = "scammer domain" #only reflects when score exceeds 4
   } else {
     merged[row,results_col] = "non-scammer"
   }
@@ -106,7 +116,7 @@ recall_accuracy(merged$status, merged$results)
 #moderately accurate: weighted recall = 0.7451737
 
 #removing unnecessary cols
-merged = merged[,-c(14,15,16)]
+merged = merged[,-c(15,16,17)]
 
 #rearrange cols
-merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "latitude", "longitude","postingLatitude", "postingLongitude", "price", "status", "results", "score", "reason")]
+merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "latitude", "longitude", "postingLatitude", "postingLongitude", "citystate", "price", "status", "results", "score", "reason")]
