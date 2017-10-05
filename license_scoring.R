@@ -1,6 +1,6 @@
 #set a dataframe for license
 license = data.frame(matrix(nrow = 4, ncol = 5))
-colnames(license) = c("license","status", "count", "percentage", "score")
+colnames(license) = c("license", "status", "count", "percentage", "score")
 
 i <- sapply(license, is.factor)
 license[i] <- lapply(license[i], as.character)
@@ -60,38 +60,37 @@ licensePlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(ti
 
 #function to calculate how many scammers of each license type
 row = 1
+posterCol = 4
 licenseCol = 5
-statusCol = 11
-licenseTotal = 0
-
+statusCol = 14
+total = 0
 licenseScam = 0
 licenseNonScam = 0
-
-naTotal = 0
 naScam = 0
 naNonScam = 0
-
 while (row <= nrow(prepost)){
-  if (prepost[row, licenseCol] == "") {
-    naTotal = naTotal + 1
-    if (prepost[row,statusCol] == "scammer"){
-      naScam = naScam + 1
-    } else if (prepost[row,statusCol] == "non-scammer"){
-      naNonScam = naNonScam + 1
-    }
-  } else if (prepost[row, licenseCol] != ""){
-    licenseTotal = licenseTotal + 1
-    if (prepost[row,statusCol] == "scammer"){
-      licenseScam = licenseScam + 1
-    } else if (prepost[row,statusCol] == "non-scammer"){
-      licenseNonScam = licenseNonScam + 1
+  if (prepost[row, posterCol] == "agent"){
+    if (prepost[row, licenseCol] == "") {
+      if (prepost[row,statusCol] == "scammer"){
+        total = total + 1
+        naScam = naScam + 1
+      } else if (prepost[row,statusCol] == "non-scammer"){
+        naNonScam = naNonScam + 1
+      }
+    } else if (prepost[row, licenseCol] != ""){
+      if (prepost[row,statusCol] == "scammer"){
+        total = total + 1
+        licenseScam = licenseScam + 1
+      } else if (prepost[row,statusCol] == "non-scammer"){
+        licenseNonScam = licenseNonScam + 1
+      }
     }
   }
   row = row + 1
-  license[1,4] = licenseScam/licenseTotal*100
-  license[2,4] = licenseNonScam/licenseTotal*100
-  license[3,4] = naScam/naTotal*100
-  license[4,4] = naNonScam/naTotal*100
+  license[1,4] = licenseScam/total*100
+  license[2,4] = licenseNonScam/total*100
+  license[3,4] = naScam/total*100
+  license[4,4] = naNonScam/total*100
 }
 
 #calculates score to be allocated for license based on % scammers
@@ -106,41 +105,42 @@ while (row <= nrow(license)){
   row = row + 1
 }
 
+#remove non-scammers rows
+license = license[-(c(2,4)),]
+
 #update score & reason for license scammers
 row = 1
+posterCol=4
 licenseCol=5
-statusCol=11
-scoreCol=12
-reasonCol=14
+scoreCol=15
+reasonCol=16
 while (row <= nrow(merged)){
-  if (merged[row, licenseCol] == ""){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(license[3,3])
-      if (is.na(merged[row,reasonCol])){ #update reason
-        merged[row,reasonCol] = "missing license no."
-      } else if (!is.na(merged[row,reasonCol])){
-        merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "missing license no.")
+  if (merged[row, posterCol] == "agent"){
+    if (merged[row, licenseCol] == ""){
+        merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(license[2,5])
+        if (is.na(merged[row,reasonCol])){ #update reason
+          merged[row,reasonCol] = "missing license no."
+        } else if (!is.na(merged[row,reasonCol])){
+          merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "missing license no.")
+        }
       }
+    } else if (merged[row,licenseCol] != ""){
+        merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(license[1,5])
+        if (is.na(merged[row,reasonCol])){ #update reason
+          merged[row,reasonCol] = "license scammer"
+        } else if (!is.na(merged[row,reasonCol])){
+          merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "license scammer")
+        }
     }
-  } else if (merged[row,licenseCol] != ""){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(license[1,3])
-      if (is.na(merged[row,reasonCol])){ #update reason
-        merged[row,reasonCol] = "license scammer"
-      } else if (!is.na(merged[row,reasonCol])){
-        merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "license scammer")
-      }
-    }
-  }
   row = row + 1
 }
 
 #update results
 row = 1
-results_col = 13
-score_col = 12
+results_col = 14
+score_col = 15
 while (row <= nrow(merged)){
-  if (merged[row,score_col] >= 2){ #normalized: mean(phoneScammers$score) = 2
+  if (merged[row,score_col] >= 2){ #normalized: mean(license$score) = 1.25
     merged[row,results_col] = "scammer"
   } else {
     merged[row,results_col] = "non-scammer"
@@ -153,9 +153,9 @@ library(RTextTools)
 #generate confusion matrix
 confusion_matrix = table(merged$status, merged$results)
 confusion_matrix
-#              non-scammer scammer
-#non-scammer         300      78
-#scammer               0     140
+#             non-scammer scammer
+#non-scammer         290      88
+#scammer              66      74
 
 recall_accuracy(merged$status, merged$results)
-#0.8494208
+#0.7027027
