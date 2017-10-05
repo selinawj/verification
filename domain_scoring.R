@@ -31,7 +31,7 @@ calDomainScammer <- function(x){
   row = 1
   counter = 0
   domainCol = 3
-  verifyCol = 11
+  verifyCol = 13
   total = 0
   while (row <= nrow(prepost)){
     domain = prepost[row, domainCol]
@@ -80,9 +80,9 @@ merged["results"] <- NA
 #create a reason column
 merged['reason'] <- NA
 row = 1
-score_col = 15
-results_col = 16
-reason_col = 17
+score_col = 17
+results_col = 18
+reason_col = 19
 while (row <= nrow(merged)) {
   if (merged[row,score_col] >= 4){ #normalized: mean(domainScammers$score) = 3.846154
     merged[row,results_col] = "scammer"
@@ -93,6 +93,8 @@ while (row <= nrow(merged)) {
   row = row + 1
 }
 
+library(RTextTools)
+
 #generate confusion matrix
 confusion_matrix = table(merged$status, merged$result)
 confusion_matrix
@@ -100,9 +102,11 @@ confusion_matrix
 #non-scammer         378       0
 #scammer             132       8
 
-library(RTextTools)
 recall_accuracy(merged$status, merged$results)
 #moderately accurate: weighted recall = 0.7451737
 
-#removing unnecessary columns
-merged = merged[,-c(12,13,14)]
+#removing unnecessary cols
+merged = merged[,-c(14,15,16)]
+
+#rearrange cols
+merged = merged[,c("domain", "account_id", "username", "poster", "license", "carrier", "phone_num", "latitude", "longitude","postingLatitude", "postingLongitude", "price", "status", "results", "score", "reason")]
