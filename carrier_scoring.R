@@ -1,6 +1,10 @@
 ##GG PLOTS
 library(ggplot2)
 
+#uniformize from factors to characters format
+i <- sapply(prepost, is.factor)
+prepost[i] <- lapply(prepost[i], as.character)
+
 #dataframe of how many each phone numbers are present
 carrierTable = data.frame(table(prepost$carrier))
 colnames(carrierTable) = c('type','count')
@@ -35,6 +39,16 @@ carrierScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
 scammersPlot = ggplot(carrierScammers, aes(x = reorder(status, -count), y = count, fill = carrier)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
 scammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of Carrier Type within each scammer status", y = "Count", x = "Status", fill = "Carrier")
 
+#merge table
+carrierScammersTrue = carrierScammers[carrierScammers$status!="non-scammers",]
+carrierScammersFalse = carrierScammers[carrierScammers$status!="scammers",]
+finalCarrierTable = merge(carrierScammersTrue, carrierScammersFalse, by.x="carrier", by.y="carrier")
+finalCarrierTable =finalCarrierTable[,-c(2,4)]
+finalCarrierTable[c("total", "percentage")] = NA
+colnames(finalCarrierTable) = c("carrier", "scammers", "nonscammers", "total", "scammersPercentage")
+finalCarrierTable$total = with(finalCarrierTable, scammers+nonscammers)
+finalCarrierTable$scammersPercentage = with(finalCarrierTable, scammers/total*100)
+
 ##FUNCTIONS
 
 #prints out the % of NA carrier scammers
@@ -42,22 +56,19 @@ calNaCarrierScammer <- function(){
   row = 1
   counter = 0
   carrierCol = 6
-  verifyCol = 11
+  verifyCol = 14
   naCounter = 0
-  naTotal = 0
   while (row <= nrow(prepost)){
     carrier = prepost[row, carrierCol]
     verify = prepost[row, verifyCol]
     if (carrier == ""){ #NA
-      naTotal = naTotal + 1
-      print (naTotal)
       if (verify == "scammer"){
         naCounter = naCounter + 1
       }
     }
     row = row + 1
   }
-  paste(naCounter/naTotal*100)
+  paste(naCounter/sum(prepost$status=="scammer")*100)
 }
 
 #prints out the % of mobile carrier scammers
@@ -65,21 +76,19 @@ calMobileScammer <- function(){
   row = 1
   counter = 0
   carrierCol = 6
-  verifyCol = 11
+  verifyCol = 14
   mobileCounter = 0
-  mobileTotal = 0
   while (row <= nrow(prepost)){
     carrier = prepost[row, carrierCol]
     verify = prepost[row, verifyCol]
     if (carrier == "mobile"){
-      mobileTotal = mobileTotal + 1
       if (verify == "scammer"){
         mobileCounter = mobileCounter + 1
       }
     }
     row = row + 1
   }
-  paste(mobileCounter/mobileTotal*100)
+  paste(mobileCounter/sum(prepost$status=="scammer")*100)
 }
 
 #prints out the % of voip carrier scammers
@@ -87,21 +96,19 @@ calVoipScammer <- function(){
   row = 1
   counter = 0
   carrierCol = 6
-  verifyCol = 11
+  verifyCol = 14
   voipCounter = 0
-  voipTotal = 0
   while (row <= nrow(prepost)){
     carrier = prepost[row, carrierCol]
     verify = prepost[row, verifyCol]
     if (carrier == "voip"){
-      voipTotal = voipTotal + 1
       if (verify == "scammer"){
         voipCounter = voipCounter + 1
       }
     }
     row = row + 1
   }
-  paste(voipCounter/voipTotal*100)
+  paste(voipCounter/sum(prepost$status=="scammer")*100)
 }
 
 #prints out the % of landline carrier scammers
@@ -109,21 +116,19 @@ calLandlineScammer <- function(){
   row = 1
   counter = 0
   carrierCol = 6
-  verifyCol = 11
+  verifyCol = 14
   landlineCounter = 0
-  landlineTotal = 0
   while (row <= nrow(prepost)){
     carrier = prepost[row, carrierCol]
     verify = prepost[row, verifyCol]
     if (carrier == "landline"){
-      landlineTotal = landlineTotal + 1
       if (verify == "scammer"){
         landlineCounter = landlineCounter + 1
       }
     }
     row = row + 1
   }
-  paste(landlineCounter/landlineTotal*100)
+  paste(landlineCounter/sum(prepost$status=="scammer")*100)
 }
 
 ##SCORING MECHANISM
@@ -150,62 +155,54 @@ while (row <= nrow(carrierScammers)){
 carrierScammers[1,1] = ""
 carrierScammers[5,1] = ""
 
-#assign score to domain scammers
+#remove non-scammers rows
 carrierScammers = carrierScammers[-c(1,2,3,4),]
 
 #update score & reason for carrier scammers
 row = 1
 carrierCol=6
-statusCol=11
-scoreCol=12
-reasonCol=14
+statusCol=13
+scoreCol=15
+reasonCol=16
 while (row <= nrow(merged)){
   if (merged[row, carrierCol] == ""){ #empty
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[5,5])
+      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[1,5])
       if (is.na(merged[row,reasonCol])){ #update reason
         merged[row,reasonCol] = "NA carrier"
       } else if (!is.na(merged[row,reasonCol])){
         merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "NA carrier")
       }
-    }
   } else if (merged[row,carrierCol] == "landline"){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[6,5])
+      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[2,5])
       if (is.na(merged[row,reasonCol])){ #update reason
         merged[row,reasonCol] = "landline"
       } else if (!is.na(merged[row,reasonCol])){
         merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "landline")
       }
-    }
   } else if (merged[row,carrierCol] == "mobile"){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[7,5])
+      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[3,5])
       if (is.na(merged[row,reasonCol])){ #update reason
         merged[row,reasonCol] = "mobile scammer"
       } else if (!is.na(merged[row,reasonCol])){
         merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "mobile scammer")
       }
-    }
   } else if (merged[row,carrierCol] == "voip"){
-    if (merged[row, statusCol] == "scammer"){
-      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[8,5])
+      merged[row,scoreCol] = as.numeric(merged[row,scoreCol]) + as.numeric(carrierScammers[4,5])
       if (is.na(merged[row,reasonCol])){ #update reason
         merged[row,reasonCol] = "voip"
       } else if (!is.na(merged[row,reasonCol])){
         merged[row,reasonCol] = paste(merged[row,reasonCol], ";", "voip")
       }
-    }
   }
   row = row + 1
 }
 
 #update results
 row = 1
-results_col = 13
-score_col = 12
+results_col = 14
+score_col = 15
 while (row <= nrow(merged)){
-  if (merged[row,score_col] >= 2){ #normalized: mean(as.numeric(carrierScammers$score)) = 2.25
+  if (merged[row,score_col] >= 9.75){ #normalized: mean(as.numeric(carrierScammers$score)) = 1.25
     merged[row,results_col] = "scammer"
   } else {
     merged[row,results_col] = "non-scammer"
@@ -218,9 +215,9 @@ library(RTextTools)
 #generate confusion matrix
 confusion_matrix = table(merged$status, merged$results)
 confusion_matrix
-#              non-scammer scammer
-#non-scammer         300      78
-#scammer               0     140
+#             non-scammer scammer
+#non-scammer           1     377
+#scammer               5     135
 
 recall_accuracy(merged$status, merged$results)
 #increase accuracy: 0.8494208
