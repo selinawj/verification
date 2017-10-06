@@ -10,41 +10,10 @@ license[c(3,4),1] = NA
 license[c(1,3),2] = "scammers"
 license[c(2,4),2] = "non-scammers"
 
-#count how many scammers is present in each domain
-licenseScammers = data.frame(table(prepost$license, prepost$poster == "agent", prepost$status=='scammer'))
-colnames(licenseScammers) = c('license', 'agent', 'scammer_status', 'count')
-
-#remove False agent & TRUE scammers rows
-licenseScammers = licenseScammers[licenseScammers$agent!="FALSE" & licenseScammers$scammer_status!="TRUE",]
-
-#insert with non-scammer agents with license into df
-license[2,3] = sum(licenseScammers$count)
-
-#count how many scammers is present in each domain
-licenseScammers = data.frame(table(prepost$license, prepost$poster == "agent", prepost$status=='scammer'))
-colnames(licenseScammers) = c('license', 'agent', 'scammer_status', 'count')
-
-#remove False agent & scammers rows
-licenseScammers = licenseScammers[licenseScammers$agent!="FALSE" & licenseScammers$scammer_status!="FALSE",]
-
-#remove agent & scammer_status columns
-licenseScammers[,c("agent", "scammer_status")] = NULL
-
-#no license, cannot be a non-scammer
-license[4,3] = 0
-
-#calculate number of agent license scammers & non-scammers
-row = 1
-counter = 0
-while (row <= nrow(licenseScammers)){
-  if (licenseScammers[row,1] == "" & licenseScammers[row,2] > 0){
-    license[3,3] = licenseScammers[row,2]
-  } else {
-    counter = counter + 1
-  }
-  row = row + 1
-  license[1,3] = counter
-}
+license[1,3] = sum(prepost$poster=="agent" & prepost$license!="" & prepost$status=="scammer")
+license[2,3] = sum(prepost$poster=="agent" & prepost$license!="" & prepost$status=="non-scammer")
+license[3,3] = sum(prepost$poster=="agent" & prepost$license=="" & prepost$status=="scammer")
+license[4,3] = sum(prepost$poster=="agent" & prepost$license=="" & prepost$status=="non-scammer")
 
 ##GG PLOTS
 
