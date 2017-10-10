@@ -1,6 +1,6 @@
 #set a dataframe for license
-license = data.frame(matrix(nrow = 4, ncol = 5))
-colnames(license) = c("license", "status", "count", "percentage", "score")
+license = data.frame(matrix(nrow = 4, ncol = 3))
+colnames(license) = c("license", "status", "count")
 
 i <- sapply(license, is.factor)
 license[i] <- lapply(license[i], as.character)
@@ -21,11 +21,21 @@ library(ggplot2)
 
 #plot of how many scammers in each license type category
 licenseScammersPlot = ggplot(license) + geom_bar(aes(x = reorder(license, -count), y = count, fill = status, group = status), stat = "identity", position = 'dodge') + geom_text(aes(x = reorder(license, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
-licenseScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Agent License", y = "Count", x = "License Provided", fill = "Status")
+licenseScammersPlot + labs(title = "Scammers based on Agent License", y = "Count", x = "License Provided", fill = "Status")
 
 #plot of how many license type in each status
 licensePlot = ggplot(license, aes(x = reorder(status, -count), y = count, fill = license)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
-licensePlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of Agent License Type within each scammer status", y = "Count", x = "Status", fill = "License")
+licensePlot + labs(title = "Num of Agent License Type within each scammer status", y = "Count", x = "Status", fill = "License")
+
+#merge table
+licenseScammersTrue = license[license$status!="non-scammers",]
+licenseScammersFalse = license[license$status!="scammers",]
+finalLicenseTable = merge(licenseScammersTrue, licenseScammersFalse, by.x="license", by.y="license")
+finalLicenseTable =finalLicenseTable[,-c(2,4)]
+finalLicenseTable[c("total", "percentage")] = NA
+colnames(finalLicenseTable) = c("license", "scammers", "nonscammers", "total", "scammersPercentage")
+finalLicenseTable$total = with(finalLicenseTable, scammers+nonscammers)
+finalLicenseTable$scammersPercentage = with(finalLicenseTable, scammers/total*100)
 
 #function to calculate how many scammers of each license type
 row = 1

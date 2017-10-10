@@ -6,7 +6,7 @@ tldTable = data.frame(table(prepost$tld))
 colnames(tldTable) = c('tld', 'count')
 
 #ggplot of total number of each tld type by descending order
-tldPlot = ggplot(tldTable, aes(x = reorder(tld, -count), y = count)) + geom_bar(stat = "identity")
+tldPlot = ggplot(tldTable, aes(x = reorder(tld, -count), y = count)) + geom_bar(stat = "identity") + geom_text(aes(x = tld, y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
 tldPlot
 
 #dataframe of how many scammers is present in each domain
@@ -14,7 +14,7 @@ tldScammersTable = data.frame(table(prepost$tld, prepost$status))
 colnames(tldScammersTable) = c('tld', 'status', 'count')
 
 #ggplot of TLD scammers
-tldScammersPlot = ggplot(tldScammersTable, aes(x = reorder(tld, -count), y = count, fill = status)) + geom_bar(stat = "identity")
+tldScammersPlot = ggplot(tldScammersTable, aes(x = reorder(tld, -count), y = count, fill = status)) + geom_bar(stat = "identity") + geom_text(aes(x = tld, y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
 tldScammersPlot + labs(title = "Scammers based on TLD", y = "Count", x = "TLD", fill = "Status")
 
 #count how many scammers is present in each tld

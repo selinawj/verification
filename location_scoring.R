@@ -36,8 +36,8 @@ while (row <= nrow(locationTable)){
 locationTable = transform(locationTable, dist = as.numeric(dist))
 
 #plot
-hist(locationTable$dist)
-plot(locationTable$status, locationTable$dist)
+hist(locationTable$dist, las = 1, breaks = 7, xlab = "Distance (m)", ylab = "Freq", main="Histogram of Posting vs Listing distances", lwd = 2, col="turquoise")
+plot(locationTable$status, locationTable$dist, xlab = "Status", ylab = "Distance (m)", main="Location Data", col="pink")
 
 #min
 min(locationTable[,7], na.rm=T)
@@ -77,14 +77,14 @@ while (row <= nrow(locationTable)){
 library(ggplot2)
 
 #data frame for plotting quantile
-locationScammersTable = data.frame(table(locationTable$bucket, prepost$status))
+locationScammersTable = data.frame(table(locationTable$bucket, locationTable$status))
 colnames(locationScammersTable) = c('quantile', 'status', 'count')
 
 locationScammersTable[locationScammersTable==""] <- NA
 locationScammersTable <- na.omit(locationScammersTable)
 
 #ggplot of location scammers by quantiles
-locationScammersPlot = ggplot(locationScammersTable, aes(x = quantile, y = count, fill = status)) + geom_bar(stat = "identity")
+locationScammersPlot = ggplot(locationScammersTable, aes(x = quantile, y = count, fill = status)) + geom_bar(stat = "identity") + geom_text(aes(x = reorder(quantile, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
 locationScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Location Quantile", y = "Count", x = "Quantile", fill = "Status")
 
 #quantile count dataframe
@@ -95,6 +95,9 @@ library(reshape2)
 #final table
 locationQuant = dcast(locationQuant, locationTable$bucket~locationTable$status)
 colnames(locationQuant) = c("quantile", "nonscammers", "scammers")
+locationQuant[locationQuant==""] <- NA
+locationQuant <- na.omit(locationQuant)
 locationQuant[c("total", "percentage")] = NA
 locationQuant$total = with(locationQuant, scammers+nonscammers)
+locationQuant$percentage = with(locationQuant, scammers/total*100)
 locationQuant$percentage = with(locationQuant, scammers/total*100)

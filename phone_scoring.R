@@ -71,11 +71,21 @@ while (row <= nrow(phoneScammersTable)){
 
 #plot of how many scammers in each phone category
 phoneScammersPlot = ggplot(phoneScammers) + geom_bar(aes(x = reorder(type, -count), y = count, fill = status, group = status), stat = "identity", position = 'dodge') + geom_text(aes(x = reorder(type, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
-phoneScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Phone Type", y = "Count", x = "Phone Type", fill = "Status")
+phoneScammersPlot + labs(title = "Scammers based on Phone Type", y = "Count", x = "Phone Type", fill = "Status")
 
 #plot of how many of each phone type in each status
 scammersPlot = ggplot(phoneScammers, aes(x = reorder(status, -count), y = count, fill = type)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
-scammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of Phone Type of each scammer status", y = "Count", x = "Status", fill = "Type")
+scammersPlot + labs(title = "Num of Phone Type of each scammer status", y = "Count", x = "Status", fill = "Type")
+
+#merge table
+phoneScammersTrue = phoneScammers[phoneScammers$status!="non-scammers",]
+phoneScammersFalse = phoneScammers[phoneScammers$status!="scammers",]
+finalPhoneScammersTable = merge(phoneScammersTrue, phoneScammersFalse, by.x="type", by.y="type")
+finalPhoneScammersTable = finalPhoneScammersTable[,-c(2,4)]
+finalPhoneScammersTable[c("total", "percentage")] = NA
+colnames(finalPhoneScammersTable) = c("type", "scammers", "nonscammers", "total", "scammersPercentage")
+finalPhoneScammersTable$total = with(finalPhoneScammersTable, scammers+nonscammers)
+finalPhoneScammersTable$scammersPercentage = with(finalPhoneScammersTable, scammers/total*100)
 
 ##FUNCTIONS
 

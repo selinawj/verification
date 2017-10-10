@@ -6,8 +6,8 @@ colnames(priceTable) = c("id", "status", "price", "bucket")
 priceTable$price = as.numeric(as.character(priceTable$price))
 
 #plot
-hist(priceTable$price)
-plot(priceTable$status, priceTable$price)
+hist(priceTable$price, las = 1, breaks = 7, xlab = "Price ($)", ylab = "Freq", main="Histogram of Prices of Listings", lwd = 2, col="pink")
+plot(priceTable$status, priceTable$price, xlab = "Status", ylab = "Price ($)", main="Price Data", col="turquoise")
 
 #min
 min(priceTable[,3], na.rm=T)
@@ -54,8 +54,8 @@ priceScammersTable[priceScammersTable==""] <- NA
 priceScammersTable <- na.omit(priceScammersTable)
 
 #ggplot of price scammers by quantiles
-priceScammersPlot = ggplot(priceScammersTable, aes(x = quantile, y = count, fill = status)) + geom_bar(stat = "identity")
-priceScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Price Quantile", y = "Count", x = "Quantile", fill = "Status")
+priceScammersPlot = ggplot(priceScammersTable, aes(x = quantile, y = count, fill = status)) + geom_bar(stat = "identity") + geom_text(aes(x = reorder(quantile, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
+priceScammersPlot + labs(title = "Scammers based on Price Quantile", y = "Count", x = "Quantile", fill = "Status")
 
 #quantile count dataframe
 priceQuant = data.frame(table(priceTable$bucket, locationTable$status))
@@ -70,4 +70,3 @@ priceQuant <- na.omit(priceQuant)
 priceQuant[c("total", "percentage")] = NA
 priceQuant$total = with(priceQuant, scammers+nonscammers)
 priceQuant$percentage = with(priceQuant, scammers/total*100)
-locationQuant$percentage = with(locationQuant, scammers/total*100)

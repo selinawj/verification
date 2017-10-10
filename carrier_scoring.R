@@ -16,7 +16,7 @@ carrierTable[1,1] = "NA"
 
 #ggplot of total number of each carrier type
 carrierPlot = ggplot(carrierTable, aes(x = reorder(type, -count), y = count)) + geom_bar(stat = "identity") + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
-carrierPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Number of each type of carrier", y = "Count", x = "Carrier")
+carrierPlot + labs(title = "Number of each type of carrier", y = "Count", x = "Carrier")
 
 #count how many scammers is present in each carrier
 carrierScammers = data.frame(table(prepost$carrier, prepost$status=='scammer'))
@@ -33,11 +33,11 @@ carrierScammers$status[carrierScammers$status == "TRUE"] <- "scammers"
 
 #plot of how many scammers in each phone category
 carrierScammersPlot = ggplot(carrierScammers) + geom_bar(aes(x = reorder(carrier, -count), y = count, fill = status, group = status), stat = "identity", position = 'dodge') + geom_text(aes(x = reorder(carrier, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
-carrierScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Carrier Type", y = "Count", x = "Carrier Type", fill = "Status")
+carrierScammersPlot + labs(title = "Scammers based on Carrier Type", y = "Count", x = "Carrier Type", fill = "Status")
 
 #plot of how many posters in each status
 scammersPlot = ggplot(carrierScammers, aes(x = reorder(status, -count), y = count, fill = carrier)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
-scammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of Carrier Type within each scammer status", y = "Count", x = "Status", fill = "Carrier")
+scammersPlot + labs(title = "Num of Carrier Type within each scammer status", y = "Count", x = "Status", fill = "Carrier")
 
 #merge table
 carrierScammersTrue = carrierScammers[carrierScammers$status!="non-scammers",]

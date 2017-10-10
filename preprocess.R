@@ -1,4 +1,5 @@
 library(jsonlite)
+library(tldextract, lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 
 prepost = read.csv("nyc_prepost_request.csv", na.strings=" ",header=T)
 
@@ -49,6 +50,7 @@ write.csv(prepost, "renthop.csv")
 
 #create domain column
 prepost['domain']<-NA
+prepost['tld']<-NA
 
 #extract domain of each usernames into domain col
 row = 1
@@ -61,11 +63,21 @@ while (row <= nrow(prepost)){
   row = row + 1
 }
 
+#extract tld into end_domain col
+row = 1
+usernameCol = 3
+tldCol = 56
+while (row <= nrow(prepost)){
+  extract = tldextract(prepost[row,usernameCol])
+  prepost[row,tldCol] = extract$tld
+  row = row + 1
+}
+
 #create a status column
 prepost["status"] <- NA
 row = 1
 verify_status_col = 10
-scammer_col = 56
+scammer_col = 57
 while (row <= nrow(prepost)){
   status = as.character(prepost[row, verify_status_col])
   if (grepl("-1", status)) {
@@ -87,4 +99,4 @@ prepost[, (c(1, 4:18, 20:21, 23:41, 44:54))] <- NULL
 prepost = cbind(prepost, details)
 
 #rearrange columns
-prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "latitude", "longitude", "postingLatitude", "postingLongitude", "citystate", "price", "status")]
+prepost = prepost[,c("account_id", "username", "domain", "poster", "license", "carrier", "phone_num", "latitude", "longitude", "postingLatitude", "postingLongitude", "citystate", "price", "status", "tld")]

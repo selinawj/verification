@@ -12,11 +12,11 @@ lowPrice[4,3] = sum(prepost$price!="0" & prepost$price!="1" & prepost$status=="n
 
 #plot of how many scammers in each price type
 lowPriceScammersPlot = ggplot(lowPrice) + geom_bar(aes(x = reorder(price, -count), y = count, fill = status, group = status), stat = "identity", position = 'dodge') + geom_text(aes(x = reorder(price, -count), y = count, label = count, group = status), position = position_dodge(width = 1), vjust = -0.5)
-lowPriceScammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Scammers based on Price Type", y = "Count", x = "Price Type", fill = "Status")
+lowPriceScammersPlot + labs(title = "Scammers based on Price Type", y = "Count", x = "Price Type", fill = "Status")
 
 #plot of how many of price type in each status
 scammersPlot = ggplot(lowPrice, aes(x = reorder(status, -count), y = count, fill = price)) + geom_bar(stat = "identity", position = 'dodge') + geom_text(aes(label = count), position = position_dodge(width = 1), vjust = -0.5)
-scammersPlot + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(title = "Num of price type of each scammer status", y = "Count", x = "Status", fill = "Price")
+scammersPlot + labs(title = "Num of price type of each scammer status", y = "Count", x = "Status", fill = "Price")
 
 #final table
 finalLowPriceTable = data.frame(matrix(nrow=2, ncol=5))
