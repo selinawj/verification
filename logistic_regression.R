@@ -8,7 +8,7 @@ missmap(prepost, main = "Missing values vs observed")
 #license has too many missing values, we will not use it
 #dropping account_id, username, longitude, latitude, posting_longitude, posting_latitude, citystate
 
-#merging data from poster, carrier, location and price tables
+#merge data from poster, carrier, location and price tables
 data <- subset(prepost, select=c(1,2,4,6,8,9,10,11,13,14))
 data <- merge(data, locationTable, by.x="account_id", by.y="id")
 data <- merge(data, priceTable, by.x="account_id", by.y="id")
@@ -32,7 +32,7 @@ data$pricePercent[data$priceBucket==2]=23
 data$pricePercent[data$priceBucket==3]=17
 data$pricePercent[data$priceBucket==4]=12
 
-#selecting only the subset of data required
+#select only the subset of data required
 data <- subset(data, select=c(18,21,22,23,24))
 
 #convert variables to numeric
@@ -41,7 +41,7 @@ data$carrierPercent = as.numeric(data$carrierPercent)
 data$locationPercent = as.numeric(data$locationPercent)
 data$pricePercent = as.numeric(data$pricePercent)
 
-#splittling training and testing data
+#split training and testing data
 training = data[1:432,]
 testing = data[433:618,]
 
@@ -75,7 +75,7 @@ auc <- performance(pr, measure="auc")
 auc <- auc@y.values[[1]]
 auc
 
-#k-fold cross validation
+#k-fold cross validation with all variables
 library(caret)
 library(rpart)
 train_control <- trainControl(method="cv", number=10, savePredictions = TRUE)

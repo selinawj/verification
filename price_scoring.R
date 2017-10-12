@@ -1,7 +1,7 @@
 #create new dataframe to store similarity in prices
 priceTable = data.frame(prepost$account_id, prepost$status, prepost$price)
 priceTable[c("bucket")] = ""
-colnames(priceTable) = c("id", "status", "price", "bucket")
+colnames(priceTable) = c("id", "status", "price", "priceBucket")
 
 priceTable$price = as.numeric(as.character(priceTable$price))
 
@@ -47,7 +47,7 @@ while (row <= nrow(priceTable)){
 library(ggplot2)
 
 #data frame for plotting quantile
-priceScammersTable = data.frame(table(priceTable$bucket, priceTable$status))
+priceScammersTable = data.frame(table(priceTable$priceBucket, priceTable$status))
 colnames(priceScammersTable) = c('quantile', 'status', 'count')
 
 priceScammersTable[priceScammersTable==""] <- NA
@@ -58,12 +58,12 @@ priceScammersPlot = ggplot(priceScammersTable, aes(x = quantile, y = count, fill
 priceScammersPlot + labs(title = "Scammers based on Price Quantile", y = "Count", x = "Quantile", fill = "Status")
 
 #quantile count dataframe
-priceQuant = data.frame(table(priceTable$bucket, locationTable$status))
+priceQuant = data.frame(table(priceTable$priceBucket, locationTable$status))
 
 library(reshape2)
 
 #final table
-priceQuant = dcast(priceQuant, priceTable$bucket~priceTable$status)
+priceQuant = dcast(priceQuant, priceTable$priceBucket~priceTable$status)
 colnames(priceQuant) = c("quantile", "nonscammers", "scammers")
 priceQuant[priceQuant==""] <- NA
 priceQuant <- na.omit(priceQuant)
