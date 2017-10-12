@@ -41,18 +41,21 @@ data$carrierPercent = as.numeric(data$carrierPercent)
 data$locationPercent = as.numeric(data$locationPercent)
 data$pricePercent = as.numeric(data$pricePercent)
 
+#obtain correlation table
+cor(data)
+
 #split training and testing data
 training = data[1:432,]
 testing = data[433:618,]
 
 #perform logistic regression
-model <- glm(status ~ .,family=binomial(link='logit'),training)
+model <- glm(training$status ~ .,family=binomial(link='logit'),training)
 summary(model)
 anova(model, test="Chisq")
 
 #calculate accuracy of prediction
 fitted.results <- predict(model, newdata=testing, type='response')
-fitted.results <- ifelse(fitted.results > 0.5,1,2)
+fitted.results <- ifelse(fitted.results > 0.3,1,2)
 fitted.results
 misClasificError <- mean(fitted.results != as.numeric(testing$status))
 print(paste('Accuracy', 1-misClasificError))
@@ -86,4 +89,4 @@ predictions <- predict(model, data)
 data <- cbind(data, predictions)
 confusionMatrix <- confusionMatrix(data$predictions,data$status)
 confusionMatrix
-model$pred
+#model$pred
