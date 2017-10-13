@@ -30,16 +30,8 @@ while (row <= nrow(prepost)-1){
   row = row + 1
 }
 
-#clean up rows which are preposts & then delete them
-row = 1
-prepostTypeCol = 5
-while (row <= nrow(prepost)){
-  type = prepost[row, prepostTypeCol]
-  if (grepl("prepost_completed", type)){
-    prepost[row,] <- NA
-  }
-  row = row + 1
-}
+#delete prepost rows
+prepost <- prepost[!(prepost$type=="prepost_completed"),]
 
 #removing completely NA rows
 #remove rows with empty prepost blob because they don't tell us much about the various criterias req
@@ -52,22 +44,15 @@ write.csv(prepost, "renthop.csv")
 prepost['domain']<-NA
 prepost['tld']<-NA
 
-#extract domain of each usernames into domain col
+#extract domain & tld of each usernames into domain col
 row = 1
 usernameCol = 3
 domainCol = 55
+tldCol = 56
 while (row <= nrow(prepost)){
   domainList = strsplit(prepost[row,usernameCol], "@")
   domain = sapply(domainList, "[[", 2)
   prepost[row,domainCol] = domain
-  row = row + 1
-}
-
-#extract tld into end_domain col
-row = 1
-usernameCol = 3
-tldCol = 56
-while (row <= nrow(prepost)){
   extract = tldextract(prepost[row,usernameCol])
   prepost[row,tldCol] = extract$tld
   row = row + 1
@@ -75,18 +60,8 @@ while (row <= nrow(prepost)){
 
 #create a status column
 prepost["status"] <- NA
-row = 1
-verify_status_col = 10
-scammer_col = 57
-while (row <= nrow(prepost)){
-  status = as.character(prepost[row, verify_status_col])
-  if (grepl("-1", status)) {
-    prepost[row, scammer_col] = "scammer"
-  } else {
-    prepost[row, scammer_col] = "non-scammer"
-  }
-  row = row + 1
-}
+prepost$status[prepost$verification_status=="-1"] = "scammer"
+prepost$status[prepost$verification_status=="1"|prepost$verification_status=="3"] = "non-scammer"
 
 #read prepostBlob csv file pre-processed by python
 details = read.csv("details.csv", header=F)
