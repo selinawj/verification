@@ -1,4 +1,5 @@
-library("ISLR")
+library(ISLR)
+library(caret)
 
 prepost[prepost=="NULL"] <- NA
 prepost[prepost==""] <- NA
@@ -10,8 +11,8 @@ missmap(prepost, main = "Missing values vs observed")
 
 #merge data from poster, carrier, location and price tables
 data <- subset(prepost, select=c(1,2,4,6,8,9,10,11,13,14))
-data <- merge(data, locationTable, by.x="account_id", by.y="id")
-data <- merge(data, priceTable, by.x="account_id", by.y="id")
+data <- merge(data, locationTable, by.x="account_id", by.y="account_id")
+data <- merge(data, priceTable, by.x="account_id", by.y="account_id")
 data[c('posterPercent', 'carrierPercent', 'locationPercent', 'pricePercent')] <- ""
 data$posterPercent[data$poster=="agent"]=27
 data$posterPercent[data$poster=="landlord"]=31
@@ -48,45 +49,98 @@ cor(data)
 training = data[1:432,]
 testing = data[433:618,]
 
+training$status = as.numeric(training$status) - 1
+testing$status = as.numeric(testing$status) - 1
+
 #perform logistic regression
-model <- glm(training$status ~ .,family=binomial(link='logit'),training)
+model <- glm(status ~ .,family=binomial(link='logit'),training)
 summary(model)
 anova(model, test="Chisq")
 
 #calculate accuracy of prediction
 fitted.results <- predict(model, newdata=testing, type='response')
-fitted.results <- ifelse(fitted.results > 0.3,1,2)
-fitted.results
-misClasificError <- mean(fitted.results != as.numeric(testing$status))
-print(paste('Accuracy', 1-misClasificError))
+fitted.results <- round(fitted.results)
+
+#setting threshold
+fitted.results <- ifelse(fitted.results > 0.3,1,0)
 
 #generate confusion matrix
-library(RTextTools)
-confusion_matrix = table(fitted.results, as.numeric(testing$status))
-confusion_matrix
-#fitted.results   1   2
-#             1   7  25
-#             2 141  13
+confusionMatrix <- confusionMatrix(as.numeric(testing$status), fitted.results)
+confusionMatrix
+#           Reference
+#Prediction   0   1
+#         0 127  21
+#         1  12  26
 
-#obtain a ROCR curve plot and AUC value
-library(ROCR)
-p <- predict(model,newdata=testing, type="response")
-pr <- prediction(p, as.numeric(testing$status))
-prf <- performance(pr, measure="tpr", x.measure="fpr")
-plot(prf)
-auc <- performance(pr, measure="auc")
-auc <- auc@y.values[[1]]
-auc
+#plot logistic regression in R (posterPercent)
+training = data[1:432,]
+testing = data[433:618,]
+plot(x=training$posterPercent, y=as.numeric(training$status)-1, col=c('blue','orange')[as.numeric(training$status)], xlab="Poster Percent", ylab="Probability of Scammer status", xlim=c(0,40))
+model <- glm(status~posterPercent, data=training, family=binomial)
+curve(predict(model,data.frame(posterPercent=x),type="resp"), add=TRUE)
+points(training$posterPercent,fitted(model),pch=20,col=c("blue","orange")[as.numeric(training$status)])
+summary(model)
+fitted.results <- predict(model, newdata=testing, type='response')
+fitted.results <- ifelse(fitted.results > 0.3,1,0)
+testing$status = as.numeric(testing$status) - 1
+confusionMatrix <- confusionMatrix(testing$status, fitted.results)
+confusionMatrix
+
+#plot logistic regression in R (carrierPercent)
+training = data[1:432,]
+testing = data[433:618,]
+plot(x=training$carrierPercent, y=as.numeric(training$status)-1, col=c('blue','orange')[as.numeric(training$status)], xlab="Carrier Percent", ylab="Probability of Scammer status", xlim=c(0,70))
+model <- glm(status~carrierPercent, data=training, family=binomial)
+curve(predict(model,data.frame(carrierPercent=x),type="resp"), add=TRUE)
+points(training$carrierPercent,fitted(model),pch=20,col=c("blue","orange")[as.numeric(training$status)])
+summary(model)
+fitted.results <- predict(model, newdata=testing, type='response')
+fitted.results <- ifelse(fitted.results > 0.3,1,0)
+testing$status = as.numeric(testing$status) - 1
+confusionMatrix <- confusionMatrix(testing$status, fitted.results)
+confusionMatrix
+
+#plot logistic regression in R (locationPercent)
+training = data[1:432,]
+testing = data[433:618,]
+plot(x=training$locationPercent, y=as.numeric(training$status)-1, col=c('blue','orange')[as.numeric(training$status)], xlab="Location Percent", ylab="Probability of Scammer status", xlim=c(0,50))
+model <- glm(status~locationPercent, data=training, family=binomial)
+curve(predict(model,data.frame(locationPercent=x),type="resp"), add=TRUE)
+points(training$locationPercent,fitted(model),pch=20,col=c("blue","orange")[as.numeric(training$status)])
+summary(model)
+fitted.results <- predict(model, newdata=testing, type='response')
+fitted.results <- ifelse(fitted.results > 0.3,1,0)
+testing$status = as.numeric(testing$status) - 1
+confusionMatrix <- confusionMatrix(testing$status, fitted.results)
+confusionMatrix
+
+#plot logistic regression in R (pricePercent)
+training = data[1:432,]
+testing = data[433:618,]
+plot(x=training$pricePercent, y=as.numeric(training$status)-1, col=c('blue','orange')[as.numeric(training$status)], xlab="Price Percent", ylab="Probability of Scammer status", xlim=c(0,50))
+model <- glm(status~pricePercent, data=training, family=binomial)
+curve(predict(model,data.frame(pricePercent=x),type="resp"), add=TRUE)
+points(training$pricePercent,fitted(model),pch=20,col=c("blue","orange")[as.numeric(training$status)])
+summary(model)
+fitted.results <- predict(model, newdata=testing, type='response')
+fitted.results <- ifelse(fitted.results > 0.3,1,0)
+testing$status = as.numeric(testing$status) - 1
+confusionMatrix <- confusionMatrix(testing$status, fitted.results)
+confusionMatrix
+
+#box-plots for posterPercent, carrierPercent, locationPercent, pricePercent
+training = data[1:432,]
+testing = data[433:618,]
+plot(training$status, training$posterPercent, xlab = "Status", ylab = "posterPercent", main="Poster Data", col="pink", ylim=c(0,40))
+plot(training$status, training$carrierPercent, xlab = "Status", ylab = "carrierPercent", main="Carrier Data", col="pink")
+plot(training$status, training$locationPercent, xlab = "Status", ylab = "locationPercent", main="Location Data", col="pink")
+plot(training$status, training$pricePercent, xlab = "Status", ylab = "pricePercent", main="Price Data", col="pink")
 
 #k-fold cross validation with all variables
-library(caret)
 library(rpart)
-train_control <- trainControl(method="cv", number=10, savePredictions = TRUE)
-model <- train(status~., data=data, trControl=train_control, method="rpart")
-print(model)
+train_control <- trainControl(method="cv", number=20, savePredictions = TRUE)
+model <- train(status~., data=training, method="glm", family="binomial", trControl=train_control)
 
-predictions <- predict(model, data)
-data <- cbind(data, predictions)
-confusionMatrix <- confusionMatrix(data$predictions,data$status)
+prediction <- predict(model, testing)
+confusionMatrix <- confusionMatrix(testing$status, prediction)
 confusionMatrix
-#model$pred
