@@ -62,7 +62,7 @@ fitted.results <- predict(model, newdata=testing, type='response')
 fitted.results <- round(fitted.results)
 
 #setting threshold
-fitted.results <- ifelse(fitted.results > 0.3,1,0)
+#fitted.results <- ifelse(fitted.results > 0.3,1,0)
 
 #generate confusion matrix
 confusionMatrix <- confusionMatrix(as.numeric(testing$status), fitted.results)
